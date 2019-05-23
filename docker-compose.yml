@@ -2,29 +2,32 @@ version: "3"
 
 services:
     nginx:
-        image: nginx
+        image: nginx:alpine
+        working_dir: /application
         volumes:
-            - ./sites:/etc/nginx/conf.d
-            - ./www:/www
+            - ./sites/nginx:/etc/nginx/conf.d
+            - ./www:/application
         networks:
             - lnmp
-        depends_on:
-            - php
+        # links:
+        #     - php
         expose:
             - "80"
         ports:
             - "80:80"
     php:
-        image: registry.cn-shenzhen.aliyuncs.com/yansongda/php-fpm
+        image: phpdockerio/php73-fpm
+        working_dir: /application
         volumes:
-            - ./www:/www
+            # - ./sites/php7.3/php.ini:/etc/php/7.3/fpm/php.ini
+            - ./www:/application
         networks:
             - lnmp
-        depends_on:
-            - mariadb
-            - redis
-            - memcached
-            - mongo
+        # links:
+        #     - mariadb
+        #     - redis
+        #     - memcached
+        #     - mongo
         expose:
             - "9000"
     mariadb:
@@ -45,8 +48,10 @@ services:
             - ./data/redis:/data
         networks:
             - lnmp
-        expose:
-            - "6379"
+        ports:
+            - "6379:6379"
+        # expose: # expose暴露容器给link到当前容器的容器
+        #    - "6379"
     memcached:
         image: memcached
         networks:
@@ -55,28 +60,27 @@ services:
             - "11211"
     mongo:
         image: mongo
+        networks:
+            - lnmp
         restart: always
         volumes:
             - ./data/mongo:/data
         environment:
             MONGO_INITDB_ROOT_USERNAME: root
             MONGO_INITDB_ROOT_PASSWORD: root
+        expose:
+            - "27017"
 
     mongo-express:
         image: mongo-express
+        networks:
+            - lnmp
         restart: always
         ports:
             - 8081:8081
         environment:
             ME_CONFIG_MONGODB_ADMINUSERNAME: root
             ME_CONFIG_MONGODB_ADMINPASSWORD: root
-    
-    tools:
-        image: registry.cn-shenzhen.aliyuncs.com/yansongda/tools
-        volumes:
-            - ./www:/www
-        networks:
-            - lnmp
 
 networks:
     lnmp:
