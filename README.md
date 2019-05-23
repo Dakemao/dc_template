@@ -1,2 +1,2 @@
 # dc_template
-docker comper 模板
+docker-compose lnmp 模板
